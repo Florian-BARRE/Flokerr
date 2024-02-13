@@ -1,0 +1,67 @@
+version: '2'
+services:
+  web:
+    container_name: flokerr_app
+    environment:
+      TZ: Europe/Paris
+      # Secrets information
+      DB_HOST: localhost
+      DB_NAME: *
+      DB_USER: *
+      DB_PASSWORD: *
+      ENCRYPTION_KEY: *
+      # CREDENTIALS: --> used in secrets.json
+      # Public information
+      LISTENING_PORT: *
+      API_ROOT: *
+      WS_PATH: *
+      HTTP_PATH: *
+      PING_WS_CLIENTS_INTERVAL: *
+      HISTORY_TOPIC_TABLE_BASE_NAME: *
+      DEFAULT_HISTORY_SIZE: *
+      WARNING_TRESHOLD_TIME: *
+      PRIORITY_DEBUG_LEVEL: *
+    build: .
+    ports:
+      - "8765:8765"
+    volumes:
+      - mysql-socket:/var/run/mysqld
+
+  mysql:
+    container_name: flokerr_mysql
+    image: mysql:5.7
+    command: --max-connections=10000
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - mysql-socket:/var/run/mysqld
+    restart: unless-stopped
+    #ports:
+    #   - "3316:3306"
+    # Don't expose the port, we'll use the socket instead
+    environment:
+      TZ: Europe/Paris
+      MYSQL_ROOT_PASSWORD: *
+      MYSQL_DATABASE: *
+      MYSQL_USER: *
+      MYSQL_PASSWORD: *
+
+  phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: flokerr_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "5010:80"
+    environment:
+      TZ: Europe/Paris
+      PMA_HOST: *
+      PMA_USER: *
+      PMA_PASSWORD: *
+      MYSQL_ROOT_PASSWORD: *
+
+volumes:
+  mysql-data:
+    driver: local
+  mysql-socket:
+    driver: local
